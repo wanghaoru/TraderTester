@@ -1,5 +1,4 @@
 #include "MarketApi.h"
-#include "json.h"
 
 #pragma warning(disable:4996)
 
@@ -76,9 +75,9 @@ void CMarketData::UpdateMarketData(CThostFtdcDepthMarketDataField *pDepthMarketD
         {
             m_bUpperTrend = FALSE;
         }
-        memcpy(&m_szInstrumentID, &pDepthMarketData->InstrumentID, sizeof(pDepthMarketData->InstrumentID));
-        memcpy(&m_szExchangeID, &pDepthMarketData->ExchangeID, sizeof(pDepthMarketData->ExchangeID));
-        memcpy(&m_szExchangeInstID, &pDepthMarketData->ExchangeInstID, sizeof(pDepthMarketData->ExchangeInstID));
+        strcpy(m_szInstrumentID, pDepthMarketData->InstrumentID);
+        strcpy(m_szExchangeID, pDepthMarketData->ExchangeID);
+        strcpy(m_szExchangeInstID, pDepthMarketData->ExchangeInstID);
         m_fLastPrice = pDepthMarketData->LastPrice;
         m_fPreSettlementPrice = pDepthMarketData->PreSettlementPrice;
         m_fPreClosePrice = pDepthMarketData->PreClosePrice;
@@ -95,10 +94,10 @@ void CMarketData::UpdateMarketData(CThostFtdcDepthMarketDataField *pDepthMarketD
         m_fLowerLimitPrice = pDepthMarketData->LowerLimitPrice;
         m_nLastMs = cur_ms;
         m_nTickCnt++;
-    }
-    if (0==m_nTickCnt%20)
-    {
-        m_event.Wake();
+        if (0==m_nTickCnt%20)
+        {
+            m_event.Wake();
+        }
     }
 }
 
@@ -148,7 +147,9 @@ CMarketSpi::~CMarketSpi(void)
 /* 连接通知 */
 void CMarketSpi::OnFrontConnected()
 {
-    CheckFuncNameEx();
+    CPrintParams::PrintFunctionEx();
+
+    /* 设置连接状态 */
     CMarketApi *api = CMarketApi::GetInstance();
     api->m_bConnect = TRUE;
     if (!api->m_bHaveCli)
@@ -160,8 +161,10 @@ void CMarketSpi::OnFrontConnected()
 /* 断开通知 */
 void CMarketSpi::OnFrontDisconnected(int nReason)
 {
-    CheckFuncNameEx();
+    CPrintParams::PrintFunctionEx();
     CPrintApi::DbgPrint("----参数：nReason=0x%08x\n", nReason);
+
+    /* 设置连接状态 */
     CMarketApi *api = CMarketApi::GetInstance();
     api->m_bConnect = FALSE;
 }
@@ -169,174 +172,171 @@ void CMarketSpi::OnFrontDisconnected(int nReason)
 /* 心跳通知 */
 void CMarketSpi::OnHeartBeatWarning(int nTimeLapse)
 {
-    CheckFuncNameEx();
+    CPrintParams::PrintFunctionEx();
     CPrintApi::DbgPrint("----参数：nTimeLapse=%08d", nTimeLapse);
 }
 
 /* 行情通知 */
 void CMarketSpi::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData)
 {
-    CheckFuncNameEx();
-    if (pDepthMarketData)
-    {
-        CPrintApi::DbgPrint("----参数：pDepthMarketData->TradingDay=%s", pDepthMarketData->TradingDay);
-        CPrintApi::DbgPrint("          pDepthMarketData->InstrumentID=%s", pDepthMarketData->InstrumentID);
-        CPrintApi::DbgPrint("          pDepthMarketData->ExchangeID=%s", pDepthMarketData->ExchangeID);
-        CPrintApi::DbgPrint("          pDepthMarketData->ExchangeInstID=%s", pDepthMarketData->ExchangeInstID);
-        CPrintApi::DbgPrint("          pDepthMarketData->LastPrice=%8.3f", pDepthMarketData->LastPrice);
-        CPrintApi::DbgPrint("          pDepthMarketData->PreSettlementPrice=%8.3f", pDepthMarketData->PreSettlementPrice);
-        CPrintApi::DbgPrint("          pDepthMarketData->PreClosePrice=%8.3f", pDepthMarketData->PreClosePrice);
-        CPrintApi::DbgPrint("          pDepthMarketData->PreOpenInterest=%8.3f", pDepthMarketData->PreOpenInterest);
-        CPrintApi::DbgPrint("          pDepthMarketData->OpenPrice=%8.3f", pDepthMarketData->OpenPrice);
-        CPrintApi::DbgPrint("          pDepthMarketData->HighestPrice=%8.3f", pDepthMarketData->HighestPrice);
-        CPrintApi::DbgPrint("          pDepthMarketData->LowestPrice=%8.3f", pDepthMarketData->LowestPrice);
-        CPrintApi::DbgPrint("          pDepthMarketData->Volume=%d", pDepthMarketData->Volume);
-        CPrintApi::DbgPrint("          pDepthMarketData->Turnover=%8.3f", pDepthMarketData->Turnover);
-        CPrintApi::DbgPrint("          pDepthMarketData->OpenInterest=%8.3f", pDepthMarketData->OpenInterest);
-        CPrintApi::DbgPrint("          pDepthMarketData->ClosePrice=%8.3f", pDepthMarketData->ClosePrice);
-        CPrintApi::DbgPrint("          pDepthMarketData->SettlementPrice=%8.3f", pDepthMarketData->SettlementPrice);
-        CPrintApi::DbgPrint("          pDepthMarketData->UpperLimitPrice=%8.3f", pDepthMarketData->UpperLimitPrice);
-        CPrintApi::DbgPrint("          pDepthMarketData->LowerLimitPrice=%8.3f", pDepthMarketData->LowerLimitPrice);
-        CPrintApi::DbgPrint("          pDepthMarketData->PreDelta=%8.3f", pDepthMarketData->PreDelta);
-        CPrintApi::DbgPrint("          pDepthMarketData->CurrDelta=%8.3f", pDepthMarketData->CurrDelta);
-        CPrintApi::DbgPrint("          pDepthMarketData->UpdateTime=%s", pDepthMarketData->UpdateTime);
-        CPrintApi::DbgPrint("          pDepthMarketData->UpdateMillisec=%d", pDepthMarketData->UpdateMillisec);
-        CPrintApi::DbgPrint("          pDepthMarketData->BidPrice1=%8.3f", pDepthMarketData->BidPrice1);
-        CPrintApi::DbgPrint("          pDepthMarketData->BidVolume1=%d", pDepthMarketData->BidVolume1);
-        CPrintApi::DbgPrint("          pDepthMarketData->AskPrice1=%8.3f", pDepthMarketData->AskPrice1);
-        CPrintApi::DbgPrint("          pDepthMarketData->AskVolume1=%d", pDepthMarketData->AskVolume1);
-        CPrintApi::DbgPrint("          pDepthMarketData->BidPrice2=%8.3f", pDepthMarketData->BidPrice2);
-        CPrintApi::DbgPrint("          pDepthMarketData->BidVolume2=%d", pDepthMarketData->BidVolume2);
-        CPrintApi::DbgPrint("          pDepthMarketData->AskPrice2=%8.3f", pDepthMarketData->AskPrice2);
-        CPrintApi::DbgPrint("          pDepthMarketData->AskVolume2=%d", pDepthMarketData->AskVolume2);
-        CPrintApi::DbgPrint("          pDepthMarketData->BidPrice3=%8.3f", pDepthMarketData->BidPrice3);
-        CPrintApi::DbgPrint("          pDepthMarketData->BidVolume3=%d", pDepthMarketData->BidVolume3);
-        CPrintApi::DbgPrint("          pDepthMarketData->AskPrice3=%8.3f", pDepthMarketData->AskPrice3);
-        CPrintApi::DbgPrint("          pDepthMarketData->AskVolume3=%d", pDepthMarketData->AskVolume3);
-        CPrintApi::DbgPrint("          pDepthMarketData->BidPrice4=%8.3f", pDepthMarketData->BidPrice4);
-        CPrintApi::DbgPrint("          pDepthMarketData->BidVolume4=%d", pDepthMarketData->BidVolume4);
-        CPrintApi::DbgPrint("          pDepthMarketData->AskPrice4=%8.3f", pDepthMarketData->AskPrice4);
-        CPrintApi::DbgPrint("          pDepthMarketData->AskVolume4=%d", pDepthMarketData->AskVolume4);
-        CPrintApi::DbgPrint("          pDepthMarketData->BidPrice5=%8.3f", pDepthMarketData->BidPrice5);
-        CPrintApi::DbgPrint("          pDepthMarketData->BidVolume5=%d", pDepthMarketData->BidVolume5);
-        CPrintApi::DbgPrint("          pDepthMarketData->AskPrice5=%8.3f", pDepthMarketData->AskPrice5);
-        CPrintApi::DbgPrint("          pDepthMarketData->AskVolume5=%d", pDepthMarketData->AskVolume5);
-        CPrintApi::DbgPrint("          pDepthMarketData->AveragePrice=%8.3f", pDepthMarketData->AveragePrice);
-        CPrintApi::DbgPrint("          pDepthMarketData->ActionDay=%s", pDepthMarketData->ActionDay);
+    CPrintParams::PrintFunctionEx();
+    CPrintParams::PrintParams(pDepthMarketData);
 
-        /* 设置市场行情数据个数 */
-        CMarketApi *api = CMarketApi::GetInstance();
-        api->m_data.UpdateMarketData(pDepthMarketData);
-    }
+    /* 更新市场行情数据 */
+    CMarketApi *api = CMarketApi::GetInstance();
+    api->m_data.UpdateMarketData(pDepthMarketData);
 }
 
 /* 询价通知 */
 void CMarketSpi::OnRtnForQuoteRsp(CThostFtdcForQuoteRspField *pForQuoteRsp)
 {
-    CheckFuncNameEx();
-    if (pForQuoteRsp)
-    {
-        CPrintApi::DbgPrint("----参数：pForQuoteRsp->TradingDay=%s", pForQuoteRsp->TradingDay);
-        CPrintApi::DbgPrint("          pForQuoteRsp->InstrumentID=%s", pForQuoteRsp->InstrumentID);
-        CPrintApi::DbgPrint("          pForQuoteRsp->ForQuoteSysID=%s", pForQuoteRsp->ForQuoteSysID);
-        CPrintApi::DbgPrint("          pForQuoteRsp->ForQuoteTime=%s", pForQuoteRsp->ForQuoteTime);
-        CPrintApi::DbgPrint("          pForQuoteRsp->ActionDay=%s", pForQuoteRsp->ActionDay);
-        CPrintApi::DbgPrint("          pForQuoteRsp->ExchangeID=%s", pForQuoteRsp->ExchangeID);
-    }
+    CPrintParams::PrintFunctionEx();
+    CPrintParams::PrintParams(pForQuoteRsp);
 }
 
 /* 错误响应 */
 void CMarketSpi::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-    BOOL bCheck = CheckOnRspInfoEx(pRspInfo, nRequestID, bIsLast);
+    CPrintParams::PrintFunctionEx();
+    CPrintParams::PrintParams(pRspInfo);
+
+    /* 检查响应结果 */
+    BOOL bCheck = CheckRspInfo(pRspInfo);
+    if (bCheck)
+    {
+        CPrintApi::DbgPrint("----%s响应成功", __FUNCTION__);
+    }
+    else
+    {
+        CPrintApi::DbgPrint("----%s响应失败", __FUNCTION__);
+    }
 }
 
 /* 登录响应 */
 void CMarketSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-    BOOL bCheck = CheckOnRspInfoEx(pRspInfo, nRequestID, bIsLast);
-    if (pRspUserLogin)
+    CPrintParams::PrintFunctionEx();
+    CPrintParams::PrintParams(pRspUserLogin, pRspInfo);
+
+    /* 检查响应结果 */
+    BOOL bCheck = CheckRspInfo(pRspInfo);
+    if (bCheck)
     {
-        CPrintApi::DbgPrint("----参数：pRspUserLogin->TradingDay=%s", pRspUserLogin->TradingDay);
-        CPrintApi::DbgPrint("          pRspUserLogin->LoginTime=%s", pRspUserLogin->LoginTime);
-        CPrintApi::DbgPrint("          pRspUserLogin->BrokerID=%s", pRspUserLogin->BrokerID);
-        CPrintApi::DbgPrint("          pRspUserLogin->UserID=%s", pRspUserLogin->UserID);
-        CPrintApi::DbgPrint("          pRspUserLogin->SystemName=%s", pRspUserLogin->SystemName);
-        CPrintApi::DbgPrint("          pRspUserLogin->FrontID=%08d", pRspUserLogin->FrontID);
-        CPrintApi::DbgPrint("          pRspUserLogin->SessionID=%08u", pRspUserLogin->SessionID);
-        CPrintApi::DbgPrint("          pRspUserLogin->MaxOrderRef=%s", pRspUserLogin->MaxOrderRef);
-        CPrintApi::DbgPrint("          pRspUserLogin->SHFETime=%s", pRspUserLogin->SHFETime);
-        CPrintApi::DbgPrint("          pRspUserLogin->DCETime=%s", pRspUserLogin->DCETime);
-        CPrintApi::DbgPrint("          pRspUserLogin->CZCETime=%s", pRspUserLogin->CZCETime);
-        CPrintApi::DbgPrint("          pRspUserLogin->FFEXTime=%s", pRspUserLogin->FFEXTime);
-        CPrintApi::DbgPrint("          pRspUserLogin->INETime=%s", pRspUserLogin->INETime);
+        CPrintApi::DbgPrint("----%s响应成功", __FUNCTION__);
+
+        /* 注册 */
+        CMarketApi *api = CMarketApi::GetInstance();
+        api->m_bLogin = TRUE;
+        if (!api->m_bHaveCli)
+        {
+            api->SubMarket();
+            api->SubQuote();
+        }
     }
-    CMarketApi *api = CMarketApi::GetInstance();
-    api->m_bLogin = TRUE;
-    if (!api->m_bHaveCli)
+    else
     {
-        api->SubMarket();
-        api->SubQuote();
+        CPrintApi::DbgPrint("----%s响应失败", __FUNCTION__);
     }
 }
 
 /* 注销响应 */
 void CMarketSpi::OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-    BOOL bCheck = CheckOnRspInfoEx(pRspInfo, nRequestID, bIsLast);
-    if (pUserLogout)
+    CPrintParams::PrintFunctionEx();
+    CPrintParams::PrintParams(pUserLogout, pRspInfo);
+
+    /* 检查响应结果 */
+    BOOL bCheck = CheckRspInfo(pRspInfo);
+    if (bCheck)
     {
-        CPrintApi::DbgPrint("----参数：pUserLogout->BrokerID=%s", pUserLogout->BrokerID);
-        CPrintApi::DbgPrint("          pUserLogout->UserID=%s", pUserLogout->UserID);
+        CPrintApi::DbgPrint("----%s响应成功", __FUNCTION__);
+
+        /* 注销 */
+        CMarketApi *api = CMarketApi::GetInstance();
+        api->m_bLogin = FALSE;
     }
-    CMarketApi *api = CMarketApi::GetInstance();
-    api->m_bLogin = FALSE;
+    else
+    {
+        CPrintApi::DbgPrint("----%s响应失败", __FUNCTION__);
+    }
 }
 
 /* 订阅行情响应 */
 void CMarketSpi::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-    BOOL bCheck = CheckOnRspInfoEx(pRspInfo, nRequestID, bIsLast);
-    if (pSpecificInstrument)
+    CPrintParams::PrintFunctionEx();
+    CPrintParams::PrintParams(pSpecificInstrument, pRspInfo);
+
+    /* 检查响应结果 */
+    BOOL bCheck = CheckRspInfo(pRspInfo);
+    if (bCheck)
     {
-        CPrintApi::DbgPrint("----参数：pSpecificInstrument->InstrumentID=%s", pSpecificInstrument->InstrumentID);
+        CPrintApi::DbgPrint("----%s响应成功", __FUNCTION__);
+    }
+    else
+    {
+        CPrintApi::DbgPrint("----%s响应失败", __FUNCTION__);
     }
 }
 
 /* 取消行情响应 */
 void CMarketSpi::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-    BOOL bCheck = CheckOnRspInfoEx(pRspInfo, nRequestID, bIsLast);
-    if (pSpecificInstrument)
+    CPrintParams::PrintFunctionEx();
+    CPrintParams::PrintParams(pSpecificInstrument, pRspInfo);
+
+    /* 检查响应结果 */
+    BOOL bCheck = CheckRspInfo(pRspInfo);
+    if (bCheck)
     {
-        CPrintApi::DbgPrint("----参数：pSpecificInstrument->InstrumentID=%s", pSpecificInstrument->InstrumentID);
+        CPrintApi::DbgPrint("----%s响应成功", __FUNCTION__);
+    }
+    else
+    {
+        CPrintApi::DbgPrint("----%s响应失败", __FUNCTION__);
     }
 }
 
 /* 订阅询价响应 */
 void CMarketSpi::OnRspSubForQuoteRsp(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-    BOOL bCheck = CheckOnRspInfoEx(pRspInfo, nRequestID, bIsLast);
-    if (pSpecificInstrument)
+    CPrintParams::PrintFunctionEx();
+    CPrintParams::PrintParams(pSpecificInstrument, pRspInfo);
+
+    /* 检查响应结果 */
+    BOOL bCheck = CheckRspInfo(pRspInfo);
+    if (bCheck)
     {
-        CPrintApi::DbgPrint("----参数：pSpecificInstrument->InstrumentID=%s", pSpecificInstrument->InstrumentID);
+        CPrintApi::DbgPrint("----%s响应成功", __FUNCTION__);
+    }
+    else
+    {
+        CPrintApi::DbgPrint("----%s响应失败", __FUNCTION__);
     }
 }
 
 /* 取消询价响应 */
 void CMarketSpi::OnRspUnSubForQuoteRsp(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-    BOOL bCheck = CheckOnRspInfoEx(pRspInfo, nRequestID, bIsLast);
-    if (pSpecificInstrument)
+    CPrintParams::PrintFunctionEx();
+    CPrintParams::PrintParams(pSpecificInstrument, pRspInfo);
+
+    /* 检查响应结果 */
+    BOOL bCheck = CheckRspInfo(pRspInfo);
+    if (bCheck)
     {
-        CPrintApi::DbgPrint("----参数：pSpecificInstrument->InstrumentID=%s", pSpecificInstrument->InstrumentID);
+        CPrintApi::DbgPrint("----%s响应成功", __FUNCTION__);
+    }
+    else
+    {
+        CPrintApi::DbgPrint("----%s响应失败", __FUNCTION__);
     }
 }
 
 /* 登录操作 */
 void CMarketApi::Login(void)
 {
-    CheckFuncNameEx();
+    CPrintParams::PrintFunctionEx();
     CThostFtdcReqUserLoginField req;
     memset(&req, 0, sizeof(req));
     memcpy(&req.BrokerID, &m_cfg.m_szBrokerID, sizeof(m_cfg.m_szBrokerID));
@@ -348,7 +348,7 @@ void CMarketApi::Login(void)
 /* 注销操作 */
 void CMarketApi::Logout(void)
 {
-    CheckFuncNameEx();
+    CPrintParams::PrintFunctionEx();
     CThostFtdcUserLogoutField req;
     memset(&req, 0, sizeof(req));
     memcpy(&req.BrokerID, &m_cfg.m_szBrokerID, sizeof(m_cfg.m_szBrokerID));
@@ -359,7 +359,7 @@ void CMarketApi::Logout(void)
 /* 订阅行情操作 */
 void CMarketApi::SubMarket(void)
 {
-    CheckFuncNameEx();
+    CPrintParams::PrintFunctionEx();
     char *ppInstrumentID[] = {"cu1601"};
     m_api->SubscribeMarketData(ppInstrumentID, 1);
 }
@@ -367,7 +367,7 @@ void CMarketApi::SubMarket(void)
 /* 取消行情操作 */
 void CMarketApi::UnSubMarket(void)
 {
-    CheckFuncNameEx();
+    CPrintParams::PrintFunctionEx();
     char *ppInstrumentID[] = {"cu1601"};
     m_api->UnSubscribeMarketData(ppInstrumentID, 1);
 }
@@ -375,7 +375,7 @@ void CMarketApi::UnSubMarket(void)
 /* 订阅询价操作 */
 void CMarketApi::SubQuote(void)
 {
-    CheckFuncNameEx();
+    CPrintParams::PrintFunctionEx();
     char *ppInstrumentID[] = {"cu1601"};
     m_api->SubscribeForQuoteRsp(ppInstrumentID, 1);
 }
@@ -383,7 +383,7 @@ void CMarketApi::SubQuote(void)
 /* 取消询价操作 */
 void CMarketApi::UnSubQuote(void)
 {
-    CheckFuncNameEx();
+    CPrintParams::PrintFunctionEx();
     char *ppInstrumentID[] = {"cu1601"};
     m_api->UnSubscribeForQuoteRsp(ppInstrumentID, 1);
 }
@@ -560,7 +560,7 @@ CMarketApi *CMarketApi::CreateInstance(void)
     if (!m_pInstance)
     {
         m_pInstance = new CMarketApi();
-        //m_pInstance->m_bHaveCli = TRUE;
+        //m_pInstance->m_bHaveCli = TRUE; /* 用来以命令行调试之用，不用时注销即可 */
     }
     return m_pInstance;
 }
@@ -586,7 +586,9 @@ CMarketApi::CMarketApi(void)
     m_bLogin = FALSE;
     m_bHaveCli = FALSE;
     m_hThread = NULL;
-    m_api = CThostFtdcMdApi::CreateFtdcMdApi();
+    char *szFlowDir = "./MarketFlow/";
+    CreateDir(szFlowDir);
+    m_api = CThostFtdcMdApi::CreateFtdcMdApi(szFlowDir);
     m_spi = new CMarketSpi;
     m_api->RegisterSpi(m_spi);
     m_api->RegisterFront(m_cfg.m_szMarketAddr);

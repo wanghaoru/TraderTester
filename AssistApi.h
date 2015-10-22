@@ -41,7 +41,9 @@ public:
     /* 报单信息 */
 public:
     TThostFtdcOrderRefType      m_szMaxOrderRef;/* 最大报单引用 */
-    TThostFtdcOrderRefType	    m_szOrderRef; /* 报单引用 */
+    TThostFtdcOrderRefType	    m_szOrderRef; /* 期货报单引用 */
+    TThostFtdcOrderRefType      m_szExecOrderRef; /* 期权报单引用 */
+    TThostFtdcOrderRefType      m_szQuoteRef; /* ??? */
 
     /* 合约信息 */
 public:
@@ -96,6 +98,53 @@ private:
     HANDLE m_hEvent;
 };
 
+/* 参数打印类 */
+class CPrintParams
+{
+public:
+    static void PrintFunction(const char *szFuncName);
+#define PrintFunctionEx()         PrintFunction((const char *)__FUNCTION__)
+    static void PrintParams(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcExecOrderField *pExecOrder, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcQuoteField *pQuote, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcForQuoteRspField *pForQuoteRsp, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcForQuoteField *pForQuote, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcTradingNoticeInfoField *pTradingNoticeInfo, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcTradingNoticeField *pTradingNotice, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcOrderActionField *pOrderAction, CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcInputExecOrderField *pInputExecOrder, CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcExecOrderActionField *pExecOrderAction, CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcInputExecOrderActionField *pInputExecOrderAction, CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcInputQuoteField *pInputQuote, CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcQuoteActionField *pQuoteAction, CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcInputQuoteActionField *pInputQuoteAction, CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcInputForQuoteField *pInputForQuote, CThostFtdcRspInfoField *pRspInfo);
+    static void PrintParams(CThostFtdcNoticeField *pNotice, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcExchangeField *pExchange, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcTradingCodeField *pTradingCode, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcProductField *pProduct, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcDepthMarketDataField *pDepthMarketData, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcInvestorField *pInvestor, CThostFtdcRspInfoField *pRspInfo = NULL);
+    static void PrintParams(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo = NULL);
+private:
+    static CPrintParams *GetInstance(void);
+    CPrintParams(void);
+    ~CPrintParams(void);
+    static CPrintParams *m_pInstance;
+    BOOL   m_bPrintParams;
+};
+
 /* 打印类 */
 class CPrintApi
 {
@@ -119,113 +168,29 @@ private:
     CLock   m_lock;
 };
 
-/* 触发阶段 */
-typedef enum
+/* 时钟类型 */
+typedef struct  
 {
-    E_TRIGGER_STAGE_REQ,
-    E_TRIGGER_STAGE_RSP,
-    E_TRIGGER_STAGE_ERR,
-    E_TRIGGER_STAGE_RTN,
-    E_TRIGGER_STAGE_COUNT
-}E_TRIGGER_STAGE_TYPE;
+    SYSTEMTIME  curTm;  /* 当前时间 */
+    time_t      curUs;  /* 当前微秒数 */
+    time_t      allUs;  /* 当前总秒数 */
+}ClockTime;
 
-/* 触发类 */
-class CTrigger
-{
-public:
-    CTrigger(int nRequestID, char *szFuncName, double fTriggerTime, int nTriggerStage);
-    CTrigger(CTrigger *trigger);
-    ~CTrigger(void);
+/* 获取时钟时间-以微秒计数 */
+void GetClockTime(ClockTime *clock);
 
-private:
-    friend class CTriggerLogApi;
-    friend class CTriggerList;
-    int     m_nRequestID;
-    char   *m_szFuncName;
-    double  m_fTriggerTime;
-    int     m_nTriggerStage;
-};
+/* 创建目录 */
+BOOL CreateDir(const char *szDir);
 
-/* 触发链表 */
-class CTriggerList
-{
-public:
-    CTriggerList();
-    ~CTriggerList();
+/* 字符串转换函数 */
+int ConvertTStrToCStr(CHAR *dst,  int dst_size, const TCHAR *src);
+int ConvertCStrToTStr(TCHAR *dst, int dst_size, const CHAR  *src);
+int ConvertTStrToWStr(WCHAR *dst, int dst_size, const TCHAR *src);
+int ConvertWStrToTStr(TCHAR *dst, int dst_size, const WCHAR *src);
+int ConvertWStrToCStr(CHAR *dst,  int dst_size, const WCHAR *src);
+int ConvertCStrToWStr(WCHAR *dst, int dst_size, const CHAR  *src);
 
-public:
-    void AddTrigger(CTrigger *trigger);
-    BOOL IsComplete(void);
-    void PrintLog(void);
-private:
-    vector<CTrigger *> m_vector;
-    int   m_nRequestID;
-    BOOL  m_bIsComplete;
-};
-
-/* 触发日志 */
-class CTriggerLogApi
-{
-public:
-    /* 启动 */
-    void Start(void);
-    /* 停止 */
-    void Stop(void);
-    /* 触发 */
-    static void Trigger(int nReqeustID, char *szFuncName, int nTriggerStage);
-#define TriggerEx(nRequestID, nTriggerStage)       Trigger(nRequestID, __FUNCTION__, nTriggerStage)
-    /* 处理 */
-    void Process(void);
-
-private:
-    queue<CTrigger *>         m_triggerQueue;
-    map<int, CTriggerList *>  m_trigerListMap;
-    CEvent  m_event;
-
-public:
-    BOOL IsRunning(void);
-private:
-    BOOL  m_bRunning;
-
-private:
-    static DWORD WINAPI ThreadProc(LPVOID lpParam);
-    HANDLE  m_hThread;
-
-public:
-    static CTriggerLogApi *GetInstance(void);
-private:
-    CTriggerLogApi(void);
-    ~CTriggerLogApi(void);
-    static CTriggerLogApi *m_pInstance;
-    class CSelfRelease
-    {
-    public:
-        CSelfRelease();
-        ~CSelfRelease();
-    };
-    static CSelfRelease  m_self;
-};
-
-#ifdef _DEBUG
-/* 检查函数名称 */
-extern void CheckFuncName(const char *szFuncName);
-/* 检查错误信息 */
-extern BOOL CheckOnErrRtnInfo(const char *szFuncName, CThostFtdcRspInfoField *pRspInfo);
-/* 检查响应信息 */
-extern BOOL CheckOnRspInfo(const char *szFuncName, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
-#define CheckFuncNameEx()                CheckFuncName((const char *)__FUNCTION__)
-#define CheckOnErrRtnInfoEx(x1)          CheckOnErrRtnInfo((const char *)__FUNCTION__, x1)
-#define CheckOnRspInfoEx(x1, x2, x3)     CheckOnRspInfo((const char *)__FUNCTION__, x1, x2, x3)
-#else
-/* 检查函数名称 */
-extern void CheckFuncName(void);
-/* 检查错误信息 */
-extern BOOL CheckOnErrRtnInfo(CThostFtdcRspInfoField *pRspInfo);
-/* 检查响应信息 */
-extern BOOL CheckOnRspInfo(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
-#define CheckFuncNameEx()                CheckFuncName()
-#define CheckOnErrRtnInfoEx(x1)          CheckOnErrRtnInfo(x1)
-#define CheckOnRspInfoEx(x1, x2, x3)     CheckOnRspInfo(x1, x2, x3)
-#endif /* _DEBUG */
+/* 检查响应结果函数 */
+BOOL CheckRspInfo(CThostFtdcRspInfoField *pRspInfo);
 
 #endif /* __ASSIST_API_H__ */

@@ -23,25 +23,6 @@ int main(int argc, char *argv[])
     market_api->Start();
 #endif
 #if 1
-    /* 日志接口测试 */
-    CTriggerLogApi *log_api = CTriggerLogApi::GetInstance();
-    log_api->Start();
-    int i = 0;
-    while (i++<20)
-    {
-    #if 0
-        CTriggerLogApi::Trigger(i, 0);
-        Sleep(2000);
-        CTriggerLogApi::Trigger(i, 1);
-        Sleep(2000);
-        CTriggerLogApi::Trigger(i, 2);
-        Sleep(2000);
-    #else
-        Sleep(4000);
-    #endif
-    }
-#endif
-#if 1
     /* 主线程等待 */
     while (1)
     {

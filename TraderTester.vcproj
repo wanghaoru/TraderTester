@@ -24,6 +24,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="copy .\CTP_6.3.8\thosttraderapi.dll .\Debug\&#x0D;&#x0A;copy .\CTP_6.3.8\thostmduserapi.dll .\Debug\"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -103,6 +104,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="copy .\CTP_6.3.8\thosttraderapi.dll .\Debug\&#x0D;&#x0A;copy .\CTP_6.3.8\thostmduserapi.dll .\Debug\"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -118,6 +120,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="./CTP_6.3.8"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -136,7 +139,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="thosttraderapi.lib thostmduserapi.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="./CTP_6.3.8"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -201,10 +206,6 @@
 			>
 			<File
 				RelativePath=".\AssistApi.h"
-				>
-			</File>
-			<File
-				RelativePath=".\json.h"
 				>
 			</File>
 			<File
